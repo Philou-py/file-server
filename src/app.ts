@@ -3,8 +3,9 @@ import dotenv from "dotenv";
 import express from "express";
 import cors from "cors";
 import helmet from "helmet";
-import { connect } from "mongodb";
+import { connect } from "mongoose";
 import multer from "multer";
+import FileModel from "./models/File";
 
 dotenv.config();
 
@@ -17,6 +18,7 @@ app.use(
 );
 app.use(helmet());
 app.use(express.json());
+app.use("/test", express.static(__dirname + "/test"));
 
 const storage = multer.diskStorage({
   destination: "uploads/",
@@ -29,7 +31,7 @@ const upload = multer({ storage });
 
 // Connect to MongoDB
 connect(
-  `mongodb://${process.env.DB_USER}:${process.env.DB_PWD}@${process.env.DB_HOST}/storage?authSource=admin`,
+  `mongodb://${process.env.DB_USER}:${process.env.DB_PWD}@${process.env.DB_HOST}/raspistorage?authSource=admin`,
   {
     useNewUrlParser: true,
     useUnifiedTopology: true,
@@ -51,6 +53,31 @@ app.get("/", (req, res) => {
   });
 });
 
-app.get("/home", (req, res) => {
-  res.sendFile(__dirname + "/index.html");
+const fileUpload = upload.single("file");
+app.post("/upload", async (req, res) => {
+  fileUpload(req, res, (error) => {
+    if (error) {
+      console.log(req.file);
+      res.send({ error });
+    } else {
+      console.log(req.file);
+      if (req.file === undefined) {
+        res.send({ error: "No file was provided!" });
+      } else {
+        const newFile = new FileModel({
+          path: req.file.path,
+          category: "divers",
+          size: req.file.size,
+          owner: "5d6ede6a0ba62570afcedd3a",
+          application: "AgendaSanté",
+        });
+        try {
+          newFile.save();
+          res.send({ msg: "File uploaded successfully!" });
+        } catch (error) {
+          res.send({ error });
+        }
+      }
+    }
+  });
 });
