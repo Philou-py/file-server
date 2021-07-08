@@ -1,7 +1,9 @@
 import { Schema, model, Document, SchemaTimestampsConfig } from "mongoose";
 
-interface FileDocument extends Document, SchemaTimestampsConfig {
-  path: string;
+export interface FileDocument extends Document, SchemaTimestampsConfig {
+  name: string;
+  originalName: string;
+  downloadURL: string;
   category: string;
   size: number;
   owner: string;
@@ -10,7 +12,9 @@ interface FileDocument extends Document, SchemaTimestampsConfig {
 
 const FileSchema = new Schema(
   {
-    path: { type: String, required: true },
+    name: { type: String, required: true },
+    originalName: { type: String, required: true },
+    downloadURL: { type: String, required: true },
     category: { type: String, required: true },
     size: { type: Number, required: true },
     owner: { type: String, required: true },
