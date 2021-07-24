@@ -19,6 +19,7 @@
   },
   "homepage": "https://github.com/Philou-py/file-server#readme",
   "devDependencies": {
+    "@types/cookie-parser": "^1.4.2",
     "@types/cors": "^2.8.10",
     "@types/express": "^4.17.12",
     "@types/mongoose": "^5.11.97",
@@ -30,6 +31,7 @@
   },
   "dependencies": {
     "axios": "^0.21.1",
+    "cookie-parser": "^1.4.5",
     "cors": "^2.8.5",
     "dotenv": "^10.0.0",
     "express": "^4.17.1",
