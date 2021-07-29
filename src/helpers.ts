@@ -22,7 +22,7 @@ export const checkAuth = async (
     next();
   } catch (error) {
     console.log(error);
-    res.send({ error });
+    res.status(500).send({ error });
   }
 };
 
@@ -33,7 +33,7 @@ export const requireAuth = async (
 ) => {
   req.context.requireAuth = true;
   if (!req.currentUser) {
-    res.send({ error: "This route requires authentication!" });
+    res.status(401).send({ error: "This route requires authentication!" });
   } else {
     next();
   }
@@ -49,7 +49,7 @@ export const getFileWithId = async (
     if (file === null) {
       res.status(404).send({ error: "This file does not exist!" });
     } else if (req.context.requireAuth && req.currentUser!.id != file.owner) {
-      res.status(401).send({ error: "You are not authorised to use this file!" });
+      res.status(403).send({ error: "You are not authorised to use this file!" });
     } else {
       req.context.fileInfo = file;
       next();
