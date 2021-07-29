@@ -52,7 +52,11 @@ router.get("/", requireAuth, async (req, res) => {
 
 router.get("/:id", requireAuth, getFileWithId, async (req, res) => {
   const filePath = `../uploads/${req.context.fileInfo!.name}`;
-  res.sendFile(join(__dirname, filePath));
+  const headers: Record<string, string> = { "Cache-Control": "private, max-age=604800" };
+  if (req.query.attachment === "true") {
+    headers["Content-Disposition"] = "attachment";
+  }
+  res.sendFile(join(__dirname, filePath), { headers });
 });
 
 router.get("/:id/infos", requireAuth, getFileWithId, async (req, res) => {
