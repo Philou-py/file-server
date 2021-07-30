@@ -8,6 +8,7 @@ export interface FileDocument extends Document, SchemaTimestampsConfig {
   size: number;
   owner: string;
   application: string;
+  isPublic: boolean;
 }
 
 const FileSchema = new Schema(
@@ -19,6 +20,7 @@ const FileSchema = new Schema(
     size: { type: Number, required: true },
     owner: { type: String, required: true },
     application: { type: String, required: true },
+    isPublic: { type: Boolean, required: true },
   },
   { timestamps: true }
 );
