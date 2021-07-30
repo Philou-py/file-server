@@ -50,7 +50,7 @@ router.get("/current-user", requireAuth, async (req, res) => {
   }
 });
 
-router.get("/:id", requireAuth, getFileWithId, async (req, res) => {
+router.get("/:id", getFileWithId, requireBeingOwnerUnlessPublic, async (req, res) => {
   const filePath = `../uploads/${req.context.fileInfo!.name}`;
   const headers: Record<string, string> = { "Cache-Control": "private, max-age=604800" };
   if (req.query.attachment === "true") {
@@ -59,11 +59,11 @@ router.get("/:id", requireAuth, getFileWithId, async (req, res) => {
   res.sendFile(join(__dirname, filePath), { headers });
 });
 
-router.get("/:id/infos", requireAuth, getFileWithId, async (req, res) => {
+router.get("/:id/infos", getFileWithId, requireBeingOwnerUnlessPublic, async (req, res) => {
   res.send({ file: req.context.fileInfo! });
 });
 
-router.delete("/:id", requireAuth, getFileWithId, async (req, res) => {
+router.delete("/:id", getFileWithId, requireBeingOwner, async (req, res) => {
   const filePath = `../uploads/${req.context.fileInfo!.name}`;
   try {
     unlinkSync(join(__dirname, filePath));
