@@ -1,14 +1,10 @@
 import { basename, extname } from "path";
-import express from "express";
+import { Request, Response, NextFunction } from "express";
 import axios from "axios";
 import multer from "multer";
 import FileModel from "./models/File";
 
-export const checkAuth = async (
-  req: express.Request,
-  res: express.Response,
-  next: express.NextFunction
-) => {
+export const checkAuth = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { data } = await axios.get("https://jsonplaceholder.typicode.com/users/1");
     req.currentUser = {
@@ -26,11 +22,7 @@ export const checkAuth = async (
   }
 };
 
-export const requireAuth = async (
-  req: express.Request,
-  res: express.Response,
-  next: express.NextFunction
-) => {
+export const requireAuth = async (req: Request, res: Response, next: NextFunction) => {
   req.context.requireAuth = true;
   if (!req.currentUser) {
     res.status(401).send({ error: "This route requires authentication!" });
@@ -39,17 +31,11 @@ export const requireAuth = async (
   }
 };
 
-export const getFileWithId = async (
-  req: express.Request,
-  res: express.Response,
-  next: express.NextFunction
-) => {
+export const getFileWithId = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const file = await FileModel.findById(req.params.id);
     if (file === null) {
       res.status(404).send({ error: "This file does not exist!" });
-    } else if (req.context.requireAuth && req.currentUser!.id != file.owner) {
-      res.status(403).send({ error: "You are not authorised to use this file!" });
     } else {
       req.context.fileInfo = file;
       next();
@@ -60,7 +46,31 @@ export const getFileWithId = async (
   }
 };
 
-export const storage = multer.diskStorage({
+const checkFileExists = (req: Request) => {
+  if (!req.context.fileInfo) throw new Error("Information about the file could not be found!");
+};
+
+export const requireBeingOwner = (req: Request, res: Response, next: NextFunction) => {
+  checkFileExists(req);
+  requireAuth(req, res, () => {
+    if (req.currentUser!.id != req.context.fileInfo!.owner) {
+      res.status(403).send({ error: "You are not authorised to use this file!" });
+    } else {
+      next();
+    }
+  });
+};
+
+export const requireBeingOwnerUnlessPublic = (req: Request, res: Response, next: NextFunction) => {
+  checkFileExists(req);
+  if (req.context.fileInfo!.isPublic) {
+    next();
+  } else {
+    requireBeingOwner(req, res, next);
+  }
+};
+
+const storage = multer.diskStorage({
   destination: "uploads/",
   filename(req, file, callback) {
     let fileExtension = extname(file.originalname);
