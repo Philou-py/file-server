@@ -6,8 +6,9 @@ import {
   upload,
   requireAuth,
   requireBeingOwner,
-  requireBeingOwnerUnlessPublic,
   getFileWithId,
+  requireBeingOwnerIf,
+  handleValidationErrors,
 } from "./helpers";
 import FileModel from "./models/File";
 
@@ -20,22 +21,21 @@ router.post("/upload", requireAuth, fileUpload, async (req, res) => {
     res.status(400).send({ error: "No file was provided!" });
   } else {
     const id = Types.ObjectId();
-    const newFile = new FileModel({
-      _id: id,
-      originalName: req.file.originalname,
-      name: req.file.filename,
-      downloadURL: `http://localhost:3000/files/${id}`,
-      category: req.body.category,
-      size: req.file.size,
-      owner: req.currentUser!.id,
-      application: req.context.application,
-      isPublic: req.body.isPublic === "true" ? true : false,
-    });
     try {
-      newFile.save();
+      const newFile = await FileModel.create({
+        _id: id,
+        originalName: req.file.originalname,
+        name: req.file.filename,
+        downloadURL: `http://localhost:3000/files/${id}`,
+        category: req.body.category,
+        size: req.file.size,
+        owner: req.currentUser!.id,
+        application: req.context.application,
+        visibility: req.body.visibility,
+      });
       res.status(201).send({ msg: "File uploaded successfully!", file: newFile });
     } catch (error) {
-      res.status(500).send({ error });
+      handleValidationErrors(error, res);
     }
   }
 });
@@ -50,7 +50,7 @@ router.get("/current-user", requireAuth, async (req, res) => {
   }
 });
 
-router.get("/:id", getFileWithId, requireBeingOwnerUnlessPublic, async (req, res) => {
+router.get("/:id", getFileWithId, requireBeingOwnerIf("private"), async (req, res) => {
   const filePath = `../uploads/${req.context.fileInfo!.name}`;
   const headers: Record<string, string> = { "Cache-Control": "private, max-age=604800" };
   if (req.query.attachment === "true") {
@@ -59,20 +59,51 @@ router.get("/:id", getFileWithId, requireBeingOwnerUnlessPublic, async (req, res
   res.sendFile(join(__dirname, filePath), { headers });
 });
 
-router.get("/:id/infos", getFileWithId, requireBeingOwnerUnlessPublic, async (req, res) => {
+router.get("/:id/infos", getFileWithId, requireBeingOwnerIf("private"), (req, res) => {
   res.send({ file: req.context.fileInfo! });
 });
 
-router.delete("/:id", getFileWithId, requireBeingOwner, async (req, res) => {
-  const filePath = `../uploads/${req.context.fileInfo!.name}`;
-  try {
-    unlinkSync(join(__dirname, filePath));
-    await req.context.fileInfo!.delete();
-    res.status(200).send({ msg: "File deleted successfully!" });
-  } catch (error) {
-    console.log(error);
-    res.status(500).send({ error });
+router.patch(
+  "/:id/infos",
+  getFileWithId,
+  requireBeingOwnerIf("private", "public", "unlisted"),
+  async (req, res) => {
+    console.log(req.body);
+    if (
+      Object.keys(req.body).some((key) => {
+        return !!(key != "category" && key != "visibility");
+      })
+    )
+      res.send('Only the "category" and "visibility" fields can be modified!');
+    else {
+      const updatedFile = req.context.fileInfo!;
+      if (req.body.category) updatedFile.category = req.body.category;
+      if (req.body.visibility) updatedFile.visibility = req.body.visibility;
+      try {
+        await updatedFile.save();
+        res.send(updatedFile);
+      } catch (error) {
+        handleValidationErrors(error, res);
+      }
+    }
   }
-});
+);
+
+router.delete(
+  "/:id",
+  getFileWithId,
+  requireBeingOwnerIf("private", "public", "unlisted"),
+  async (req, res) => {
+    const filePath = `../uploads/${req.context.fileInfo!.name}`;
+    try {
+      unlinkSync(join(__dirname, filePath));
+      await req.context.fileInfo!.delete();
+      res.status(200).send({ msg: "File deleted successfully!" });
+    } catch (error) {
+      console.log(error);
+      res.status(500).send({ error });
+    }
+  }
+);
 
 export default router;
