@@ -78,3 +78,7 @@ app.get("/", (req, res) => {
 });
 
 app.use("/files", fileRoutes);
+
+app.use((req, res) => {
+  res.status(404).send({ error: "This route does not exist!" });
+});
