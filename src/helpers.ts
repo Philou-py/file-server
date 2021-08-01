@@ -61,12 +61,26 @@ export const requireBeingOwner = (req: Request, res: Response, next: NextFunctio
   });
 };
 
-export const requireBeingOwnerUnlessPublic = (req: Request, res: Response, next: NextFunction) => {
-  checkFileExists(req);
-  if (req.context.fileInfo!.isPublic) {
-    next();
+export const requireBeingOwnerIf = (...visibility: string[]) => {
+  return (req: Request, res: Response, next: NextFunction) => {
+    checkFileExists(req);
+    if (visibility.includes(req.context.fileInfo!.visibility)) {
+      requireBeingOwner(req, res, next);
+    } else {
+      next();
+    }
+  };
+};
+
+export const handleValidationErrors = (error: any, res: Response) => {
+  if (error.message.includes("validation failed")) {
+    const errors: Record<string, string> = {};
+    Object.values(error.errors as object).forEach(({ properties }) => {
+      errors[properties.path] = properties.message;
+    });
+    res.status(400).send({ validationErrors: errors });
   } else {
-    requireBeingOwner(req, res, next);
+    res.status(500).send({ error });
   }
 };
 
