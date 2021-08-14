@@ -54,9 +54,10 @@ router.get("/:id", getFileWithId, requireBeingOwnerIf("private"), async (req, re
   const filePath = `../uploads/${req.context.fileInfo!.name}`;
   const headers: Record<string, string> = { "Cache-Control": "private, max-age=604800" };
   if (req.query.attachment === "true") {
-    headers["Content-Disposition"] = "attachment";
+    res.download(join(__dirname, filePath), req.file!.originalname, { headers });
+  } else {
+    res.sendFile(join(__dirname, filePath), { headers });
   }
-  res.sendFile(join(__dirname, filePath), { headers });
 });
 
 router.get("/:id/infos", getFileWithId, requireBeingOwnerIf("private"), (req, res) => {
