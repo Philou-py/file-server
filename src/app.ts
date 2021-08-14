@@ -30,6 +30,8 @@ connect(
   `mongodb://${process.env.DB_USER}:${process.env.DB_PWD}@${process.env.DB_HOST}/raspistorage?authSource=admin`,
   {
     useNewUrlParser: true,
+    useFindAndModify: false,
+    useCreateIndex: true,
     useUnifiedTopology: true,
   }
 )
