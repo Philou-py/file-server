@@ -60,12 +60,12 @@ router.get("/:id", getFileWithId, requireBeingOwnerIf("private"), async (req, re
   }
 });
 
-router.get("/:id/infos", getFileWithId, requireBeingOwnerIf("private"), (req, res) => {
+router.get("/:id/info", getFileWithId, requireBeingOwnerIf("private"), (req, res) => {
   res.send({ file: req.context.fileInfo! });
 });
 
 router.patch(
-  "/:id/infos",
+  "/:id/info",
   getFileWithId,
   requireBeingOwnerIf("private", "public", "unlisted"),
   async (req, res) => {
