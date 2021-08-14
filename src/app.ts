@@ -75,7 +75,8 @@ app.use(checkAuth);
 
 app.get("/", (req, res) => {
   res.send({
-    msg: "The application is currently under active development!",
+    msg:
+      "Welcome to File Server! This API enables applications to upload users' files to a secure storage, and manage them easily.",
   });
 });
 
