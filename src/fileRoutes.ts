@@ -51,10 +51,10 @@ router.get("/current-user", requireAuth, async (req, res) => {
 });
 
 router.get("/:id", getFileWithId, requireBeingOwnerIf("private"), async (req, res) => {
-  const filePath = `../uploads/${req.context.fileInfo!.name}`;
+  const filePath = `/uploads/${req.context.fileInfo!.name}`;
   const headers: Record<string, string> = { "Cache-Control": "private, max-age=604800" };
   if (req.query.attachment === "true") {
-    res.download(join(__dirname, filePath), req.file!.originalname, { headers });
+    res.download(__dirname + filePath, req.file!.originalname, { headers });
   } else {
     res.sendFile(join(__dirname, filePath), { headers });
   }
@@ -95,9 +95,9 @@ router.delete(
   getFileWithId,
   requireBeingOwnerIf("private", "public", "unlisted"),
   async (req, res) => {
-    const filePath = `../uploads/${req.context.fileInfo!.name}`;
+    const filePath = `/uploads/${req.context.fileInfo!.name}`;
     try {
-      unlinkSync(join(__dirname, filePath));
+      unlinkSync(__dirname + filePath);
       await req.context.fileInfo!.delete();
       res.status(200).send({ msg: "File deleted successfully!" });
     } catch (error) {

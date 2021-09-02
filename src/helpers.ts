@@ -85,7 +85,7 @@ export const handleValidationErrors = (error: any, res: Response) => {
 };
 
 const storage = multer.diskStorage({
-  destination: "uploads/",
+  destination: __dirname + "/uploads/",
   filename(req, file, callback) {
     let fileExtension = extname(file.originalname);
     callback(null, `${basename(file.originalname, fileExtension)}-${Date.now()}${fileExtension}`);
