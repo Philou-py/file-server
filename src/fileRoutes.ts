@@ -16,17 +16,17 @@ const router = express.Router();
 
 const fileUpload = upload.single("file");
 router.post("/upload", requireAuth, fileUpload, async (req, res) => {
-  console.log(req.file);
   if (req.file === undefined) {
     res.status(400).send({ error: "No file was provided!" });
   } else {
     const id = Types.ObjectId();
+    const hostName = process.env.APP_URL ? process.env.APP_URL : "http://localhost:3000";
     try {
       const newFile = await FileModel.create({
         _id: id,
         originalName: req.file.originalname,
         name: req.file.filename,
-        downloadURL: `http://localhost:3000/files/${id}`,
+        downloadURL: `${hostName}/files/${id}`,
         category: req.body.category,
         size: req.file.size,
         owner: req.currentUser!.id,
@@ -52,9 +52,10 @@ router.get("/current-user", requireAuth, async (req, res) => {
 
 router.get("/:id", getFileWithId, requireBeingOwnerIf("private"), async (req, res) => {
   const filePath = `/uploads/${req.context.fileInfo!.name}`;
-  const headers: Record<string, string> = { "Cache-Control": "private, max-age=604800" };
+  // Allow caching for one year
+  const headers: Record<string, string> = { "Cache-Control": "public, max-age=31536000" };
   if (req.query.attachment === "true") {
-    res.download(__dirname + filePath, req.file!.originalname, { headers });
+    res.download(__dirname + filePath, req.context.fileInfo!.originalName, { headers });
   } else {
     res.sendFile(join(__dirname, filePath), { headers });
   }
