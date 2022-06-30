@@ -136,6 +136,95 @@ export const sendFileInfo = async (newFile: any, authToken: string) => {
   return responseBody;
 };
 
+const QUERY_FILE = `
+  query QueryFile($queryFileFilter: FileFilter) {
+    queryFile(filter: $queryFileFilter) {
+      id
+      originalName
+      name
+      size
+      mimeType
+      isPublic
+      owner {
+        id
+        username
+      }
+      sharedWith {
+        id
+        username
+      }
+      resource {
+        name
+      }
+      createdAt
+    }
+  }
+`;
+
+export const getFileWithId = async (req: Request, res: Response, next: NextFunction) => {
+  const { data: responseBody } = await axios.post(
+    DGRAPH_URL,
+    {
+      query: QUERY_FILE,
+      variables: { queryFileFilter: { id: req.params.id } },
+    },
+    { headers: { "X-Toccatech-Auth": req.currentUser ? req.currentUser.authToken : "" } }
+  );
+  const filesFound = responseBody.data.queryFile;
+  if (filesFound.length == 0) {
+    res.status(400).send({
+      error:
+        "The file requested either does not exist, or you may not be authorised to interact with it!",
+    });
+  } else {
+    const file = filesFound[0];
+    req.requestedFile = {
+      id: file.id,
+      originalName: file.originalName,
+      name: file.name,
+      size: file.size,
+      mimeType: file.mimeType,
+      isPublic: file.isPublic,
+      owner: file.owner,
+      sharedWith: file.sharedWith,
+      resourceName: file.resource.name,
+      createdAt: file.createdAt,
+    };
+    next();
+  }
+};
+
+const DELETE_FILE = `
+  mutation DeleteFile($deleteFileFilter: FileFilter!) {
+    deleteFile(filter: $deleteFileFilter) {
+      file {
+        name
+      }
+    }
+  }
+`;
+
+export const deleteFileInfoWithId = async (req: Request, res: Response, next: NextFunction) => {
+  const { data: responseBody } = await axios.post(
+    DGRAPH_URL,
+    {
+      query: DELETE_FILE,
+      variables: { deleteFileFilter: { id: req.params.id } },
+    },
+    { headers: { "X-Toccatech-Auth": req.currentUser ? req.currentUser.authToken : "" } }
+  );
+  const filesDeleted = responseBody.data.deleteFile.file;
+  if (filesDeleted.length == 0) {
+    res.status(400).send({
+      error:
+        "The file to delete either does not exist, or you may not be authorised to interact with it!",
+    });
+  } else {
+    req.deletedFileName = filesDeleted[0].name;
+    next();
+  }
+};
+
 const storage = multer.diskStorage({
   destination: UPLOADS_DIR,
   filename(req, file, callback) {

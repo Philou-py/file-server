@@ -37,12 +37,27 @@ interface Resource {
   acceptMimeTypes: string[];
 }
 
+interface File {
+  id: string;
+  originalName: string;
+  name: string;
+  size: number;
+  mimeType: string;
+  isPublic: boolean;
+  owner: { id: string; username: string };
+  sharedWith: { id: string; username: string }[];
+  resourceName: string;
+  createdAt: string;
+}
+
 // See: https://stackoverflow.com/a/47448486/13846311
 declare global {
   namespace Express {
     interface Request {
-      currentUser: User | null;
+      currentUser?: User;
       resource?: Resource;
+      requestedFile?: File;
+      deletedFileName?: string;
     }
   }
 }
