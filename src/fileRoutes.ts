@@ -62,7 +62,9 @@ router.post(
     } else {
       const receivedFile = responseBody.data.addFile.file[0];
       console.log(
-        `A file with the MIME type '${newFile.mimeType}' was successfully uploaded to the folder '${req.body.resource}'! ID: ${receivedFile.id}`
+        `${new Date().toISOString()} - A file with the MIME type '${
+          newFile.mimeType
+        }' was successfully uploaded to the folder '${req.body.resource}'! ID: ${receivedFile.id}`
       );
       res.status(201).send({
         msg: "The file was successfully uploaded!",

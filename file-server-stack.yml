@@ -13,3 +13,7 @@ services:
       replicas: 3
       placement:
         max_replicas_per_node: 1
+    environment:
+      - DB_URL: "http://dgraph.toccatech.fr/graphql"
+      - APP_PORT: 3001
+      - UPLOADS_DIR: /file-server/

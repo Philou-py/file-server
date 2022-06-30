@@ -7,7 +7,8 @@ import { unlinkSync } from "fs";
 import { sign } from "jsonwebtoken";
 import fs from "fs";
 
-const DGRAPH_URL = "https://dgraph.toccatech.com/graphql";
+const DGRAPH_URL = process.env.DB_URL || "https://dgraph.toccatech.com/graphql";
+const UPLOADS_DIR = process.env.UPLOADS_DIR || __dirname + "\\uploads";
 const privateKey = fs.readFileSync("./rsa_1024_priv.pem", "utf-8");
 
 const QUERY_USER = `
@@ -101,7 +102,9 @@ export const checkMimeType = async (req: Request, res: Response, next: NextFunct
       } else {
         if (typeof mimeType == "string" && !req.resource!.acceptMimeTypes.includes(mimeType)) {
           unlinkSync(req.file!.path);
-          console.log(`A file with the MIME type ${mimeType} was rejected!`);
+          console.log(
+            `${new Date().toISOString()} - A file with the MIME type ${mimeType} was rejected!`
+          );
           res.status(400).send({
             error: "The file sent does not have an appropriate MIME type for the chosen folder!",
           });
@@ -134,7 +137,7 @@ export const sendFileInfo = async (newFile: any, authToken: string) => {
 };
 
 const storage = multer.diskStorage({
-  destination: __dirname + "/uploads/", // Change to /file-server/ when releasing to production!!
+  destination: UPLOADS_DIR,
   filename(req, file, callback) {
     let fileExtension = extname(file.originalname);
     callback(null, `${basename(file.originalname, fileExtension)}-${Date.now()}${fileExtension}`);
