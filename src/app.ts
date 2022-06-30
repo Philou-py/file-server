@@ -2,8 +2,6 @@ import dotenv from "dotenv";
 import express from "express";
 import cors from "cors";
 import helmet from "helmet";
-import { connect } from "mongoose";
-import { FileDocument } from "./models/File";
 import cookieParser from "cookie-parser";
 import { checkAuth } from "./helpers";
 import fileRoutes from "./fileRoutes";
@@ -25,31 +23,18 @@ app.use(
 app.use(helmet());
 app.use(express.json());
 
-// Connect to MongoDB
-connect(
-  `mongodb://${process.env.DB_USER}:${process.env.DB_PWD}@${process.env.DB_HOST}/raspistorage?authSource=admin`,
-  {
-    useNewUrlParser: true,
-    useFindAndModify: false,
-    useCreateIndex: true,
-    useUnifiedTopology: true,
-  }
-)
-  .then(() => {
-    app.listen(3000, () => {
-      console.log("Server listening on port 3000! App url: http://localhost:3000");
-    });
-  })
-  .catch((error) => {
-    console.log(error);
-  });
-
 interface User {
   id: string;
-  name: string;
-  username: string;
-  birthdate: Date;
+  userProfileId: string;
   email: string;
+  username: string;
+  avatarURL?: string;
+  authToken: string;
+}
+
+interface Resource {
+  id: string;
+  acceptMimeTypes: string[];
 }
 
 // See: https://stackoverflow.com/a/47448486/13846311
@@ -57,26 +42,16 @@ declare global {
   namespace Express {
     interface Request {
       currentUser: User | null;
-      context: {
-        application: string;
-        requireAuth: boolean;
-        fileInfo?: FileDocument;
-      };
+      resource?: Resource;
     }
   }
 }
-
-app.use((req: express.Request, res: express.Response, next: express.NextFunction) => {
-  req.context = { application: "", requireAuth: false };
-  next();
-});
 
 app.use(checkAuth);
 
 app.get("/", (req, res) => {
   res.send({
-    msg:
-      "Welcome to File Server! This API enables applications to upload users' files to a secure storage, and manage them easily.",
+    msg: "Welcome to File Server! This API enables applications to upload users' files to a secure storage, and manage them easily.",
   });
 });
 
@@ -84,4 +59,8 @@ app.use("/files", fileRoutes);
 
 app.use((req, res) => {
   res.status(404).send({ error: "This route does not exist!" });
+});
+
+app.listen(3001, () => {
+  console.log("Server listening on port 3001! App url: http://localhost:3001");
 });
