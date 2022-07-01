@@ -9,6 +9,7 @@ import fs from "fs";
 
 const DGRAPH_URL = process.env.DB_URL || "https://dgraph.toccatech.com/graphql";
 const UPLOADS_DIR = process.env.UPLOADS_DIR || __dirname + "\\uploads";
+const AUTH_COOKIE = process.env.AUTH_COOKIE || "X-Toccatech-Auth";
 const privateKey = fs.readFileSync("./rsa_1024_priv.pem", "utf-8");
 
 const QUERY_USER = `
@@ -26,13 +27,13 @@ const QUERY_USER = `
 `;
 
 export const checkAuth = async (req: Request, res: Response, next: NextFunction) => {
-  if (!req.cookies["X-Toccatech-Auth"]) {
+  if (!req.cookies[AUTH_COOKIE]) {
     next();
   } else {
     const { data: responseBody } = await axios.post(
       DGRAPH_URL,
       { query: QUERY_USER },
-      { headers: { "X-Toccatech-Auth": req.cookies["X-Toccatech-Auth"] } }
+      { headers: { [AUTH_COOKIE]: req.cookies[AUTH_COOKIE] } }
     );
     const usersFound = responseBody.data.queryUser;
     if (usersFound.length > 0) {
@@ -43,7 +44,7 @@ export const checkAuth = async (req: Request, res: Response, next: NextFunction)
         email: user.email,
         username: user.userProfile.username,
         avatarURL: user.userProfile.avatarURL,
-        authToken: req.cookies["X-Toccatech-Auth"],
+        authToken: req.cookies[AUTH_COOKIE],
       };
     }
     next();
@@ -53,9 +54,9 @@ export const checkAuth = async (req: Request, res: Response, next: NextFunction)
 export const requireAuth = async (req: Request, res: Response, next: NextFunction) => {
   if (!req.currentUser) {
     res
-      .clearCookie("X-Toccatech-Auth")
+      .clearCookie(AUTH_COOKIE)
       .status(401)
-      .send({ error: "This route requires authentication!" });
+      .send({ error: "Cette route requiert que vous soyez connecté !" });
   } else {
     next();
   }
@@ -77,11 +78,11 @@ export const getResource = async (req: Request, res: Response, next: NextFunctio
       query: QUERY_RESOURCE,
       variables: { queryResourceFilter: { name: { eq: req.body.resource } } },
     },
-    { headers: { "X-Toccatech-Auth": req.currentUser!.authToken } }
+    { headers: { [AUTH_COOKIE]: req.currentUser!.authToken } }
   );
   const resources = responseBody.data.queryResource;
   if (resources.length == 0) {
-    res.status(400).send({ error: "This resource does not exist!" });
+    res.status(400).send({ error: "Cette resource n'existe pas !" });
   } else {
     req.resource = resources[0];
     next();
@@ -90,23 +91,36 @@ export const getResource = async (req: Request, res: Response, next: NextFunctio
 
 export const checkMimeType = async (req: Request, res: Response, next: NextFunction) => {
   if (req.file === undefined) {
-    res.status(400).send({ error: "No file was provided!" });
+    res.status(400).send({ error: "Aucun fichier n'a été sélectionné !" });
   } else {
     let magic = new Magic(MAGIC_MIME_TYPE);
     magic.detectFile(req.file!.path, (err, mimeType) => {
       if (err) {
         unlinkSync(req.file!.path);
-        res
-          .status(500)
-          .send({ error: "Sorry, we could not detect the MIME type of the file sent!" });
+        res.status(500).send({
+          error: "Désolé, nous n'avons pas pu détecter le type de contenu du fichier envoyé !",
+        });
       } else {
-        if (typeof mimeType == "string" && !req.resource!.acceptMimeTypes.includes(mimeType)) {
+        if (req.file!.mimetype !== mimeType) {
           unlinkSync(req.file!.path);
           console.log(
             `${new Date().toISOString()} - A file with the MIME type ${mimeType} was rejected!`
           );
           res.status(400).send({
-            error: "The file sent does not have an appropriate MIME type for the chosen folder!",
+            error:
+              "Essayez-vous peut-être de pirater le serveur ?? L'extension du fichier envoyé ne correspond pas à son contenu !",
+          });
+        } else if (
+          typeof mimeType == "string" &&
+          !req.resource!.acceptMimeTypes.includes(mimeType)
+        ) {
+          unlinkSync(req.file!.path);
+          console.log(
+            `${new Date().toISOString()} - A file with the MIME type ${mimeType} was rejected!`
+          );
+          res.status(400).send({
+            error:
+              "Le fichier envoyé n'a pas un type de contenu approprié pour la resource indiquée !",
           });
         } else {
           req.file!.mimetype = mimeType as string;
@@ -131,7 +145,7 @@ export const sendFileInfo = async (newFile: any, authToken: string) => {
   const { data: responseBody } = await axios.post(
     DGRAPH_URL,
     { query: ADD_FILE, variables: { addFileInput: [newFile] } },
-    { headers: { "X-Toccatech-Auth": genAdminJwt(privateKey) } }
+    { headers: { [AUTH_COOKIE]: genAdminJwt(privateKey) } }
   );
   return responseBody;
 };
@@ -168,13 +182,13 @@ export const getFileWithId = async (req: Request, res: Response, next: NextFunct
       query: QUERY_FILE,
       variables: { queryFileFilter: { id: req.params.id } },
     },
-    { headers: { "X-Toccatech-Auth": req.currentUser ? req.currentUser.authToken : "" } }
+    { headers: { [AUTH_COOKIE]: req.currentUser ? req.currentUser.authToken : "" } }
   );
   const filesFound = responseBody.data.queryFile;
   if (filesFound.length == 0) {
     res.status(400).send({
       error:
-        "The file requested either does not exist, or you may not be authorised to interact with it!",
+        "Navré, le fichier demandé n'existe pas, ou bien vous n'êtes pas autorisé à interagir avec !",
     });
   } else {
     const file = filesFound[0];
@@ -211,13 +225,13 @@ export const deleteFileInfoWithId = async (req: Request, res: Response, next: Ne
       query: DELETE_FILE,
       variables: { deleteFileFilter: { id: req.params.id } },
     },
-    { headers: { "X-Toccatech-Auth": req.currentUser ? req.currentUser.authToken : "" } }
+    { headers: { [AUTH_COOKIE]: req.currentUser ? req.currentUser.authToken : "" } }
   );
   const filesDeleted = responseBody.data.deleteFile.file;
   if (filesDeleted.length == 0) {
     res.status(400).send({
       error:
-        "The file to delete either does not exist, or you may not be authorised to interact with it!",
+        "Navré, mais le fichier à supprimer soit n'existe pas, ou bien vous n'avez pas l'autorisation de le supprimer !",
     });
   } else {
     req.deletedFileName = filesDeleted[0].name;

@@ -7,17 +7,19 @@ import cookieParser from "cookie-parser";
 import { checkAuth } from "./helpers";
 import fileRoutes from "./fileRoutes";
 
+const DOMAIN1 = process.env.DOMAIN1 || "";
+const DOMAIN2 = process.env.DOMAIN2 || "";
+const PORT = process.env.APP_PORT || 3001;
+const DGRAPH_URL = process.env.DB_URL || "https://dgraph.toccatech.com/graphql";
+const UPLOADS_DIR = process.env.UPLOADS_DIR || __dirname + "\\uploads";
+const AUTH_COOKIE = process.env.AUTH_COOKIE || "X-Toccatech-Auth";
+
 const app = express();
 
 app.use(cookieParser());
 app.use(
   cors({
-    origin: [
-      /^https:\/\/.*toccatech.com$/,
-      /^https:\/\/.*toccatech.fr$/,
-      /^(http|https):\/\/localhost:[0-9]{1,6}$/,
-      /^(http|https):\/\/127.0.0.1:[0-9]{1,6}$/,
-    ],
+    origin: [/^(http|https):\/\/localhost:[0-9]{1,6}$/, DOMAIN1, DOMAIN2],
   })
 );
 app.use(helmet());
@@ -73,15 +75,16 @@ app.get("/", (req, res) => {
 app.use("/files", fileRoutes);
 
 app.use((req, res) => {
-  res.status(404).send({ error: "This route does not exist!" });
+  res.status(404).send({ error: "Cette route n'existe pas !" });
 });
 
-const PORT = process.env.APP_PORT || 3001;
-const DGRAPH_URL = process.env.DB_URL || "https://dgraph.toccatech.com/graphql";
-const UPLOADS_DIR = process.env.UPLOADS_DIR || __dirname + "\\uploads";
 app.listen(PORT, () => {
   console.log(`Server listening on port ${PORT}!`);
   console.log(`App url: http://localhost:${PORT}`);
   console.log(`Database URL: ${DGRAPH_URL}`);
-  console.log(`Destination folder for the file uploads: ${UPLOADS_DIR}\n`);
+  console.log(`Destination folder for the file uploads: ${UPLOADS_DIR}`);
+  console.log(`Using the following cookie name for authentication: ${AUTH_COOKIE}\n`);
+  console.log(
+    DOMAIN1 ? `CORS whitelisted domain(s): ${DOMAIN1}${DOMAIN2 ? `, ${DOMAIN2}` : ""}\n` : ""
+  );
 });

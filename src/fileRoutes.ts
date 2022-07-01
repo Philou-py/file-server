@@ -20,18 +20,19 @@ const uploadBodySchema: ValidationSchema = {
   resource: {
     type: "string",
     required: true,
-    errorMessage: "The field 'resource' is required!",
+    errorMessage: "Le champ 'resource' est requis !",
   },
   isPublic: {
     type: "string",
     required: true,
     in: ["true", "false"],
-    errorMessage: "The field 'isPublic' is required and must be a boolean!",
+    errorMessage: "Le champ 'isPublic' est requis et doit être à 'true' ou à 'false' !",
   },
   sharedWith: {
     type: "string[]",
     required: true,
-    errorMessage: "The field 'sharedWith' is required and must be valid!",
+    errorMessage:
+      "Le champ 'sharedWith' est requis et doit être une liste de chaînes de caractères !",
   },
 };
 
@@ -59,7 +60,7 @@ router.post(
     if (responseBody.errors) {
       res.status(400).send({
         error:
-          "At least one of the IDs specified in 'sharedWith' does not point to a known user profile!",
+          "Au moins l'un des IDs listés dans 'sharedWith' ne revoie pas à un profile d'utilisateur connu !",
       });
     } else {
       const receivedFile = responseBody.data.addFile.file[0];
@@ -69,7 +70,7 @@ router.post(
         }' was successfully uploaded to the folder '${req.body.resource}'! ID: ${receivedFile.id}`
       );
       res.status(201).send({
-        msg: "The file was successfully uploaded!",
+        msg: "Le fichier a bien été téléversé !",
         fileId: responseBody.data.addFile.file[0].id,
       });
     }
@@ -100,7 +101,7 @@ router.get("/:id/info", getFileWithId, (req, res) => {
     } was requested!`
   );
   res.send({
-    msg: "All right, here is all about the file you requested!",
+    msg: "D'accord, voici toutes les informations à propos du fichier demandé !",
     file: req.requestedFile,
   });
 });
@@ -114,13 +115,13 @@ router.delete("/:id", requireAuth, deleteFileInfoWithId, (req, res) => {
         req.params.id
       } was successfully deleted!`
     );
-    res.status(200).send({ msg: "The file was successfully deleted!" });
+    res.status(200).send({ msg: "Le fichier a bien été supprimé !" });
   } catch (err) {
     console.log(
       `${new Date().toISOString()} - The file ${req.deletedFileName!} was not deleted as it could not be found!`
     );
     res.status(200).send({
-      msg: "You just deleted a file entry in the database pointing to a file that could not be found on the server! Congrats!",
+      msg: "Vous venez de supprimer l'entrée dans la base de données d'un fichier qui n'existe pas sur le serveur ! Bravo et surtout merci !",
     });
   }
 });
