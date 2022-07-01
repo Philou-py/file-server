@@ -1,6 +1,5 @@
-import * as dotenv from "dotenv";
-dotenv.config();
 import express from "express";
+import { join } from "path";
 import cors from "cors";
 import helmet from "helmet";
 import cookieParser from "cookie-parser";
@@ -11,7 +10,7 @@ const DOMAIN1 = process.env.DOMAIN1 || "";
 const DOMAIN2 = process.env.DOMAIN2 || "";
 const PORT = process.env.APP_PORT || 3001;
 const DGRAPH_URL = process.env.DB_URL || "https://dgraph.toccatech.com/graphql";
-const UPLOADS_DIR = process.env.UPLOADS_DIR || __dirname + "\\uploads";
+const UPLOADS_DIR = process.env.UPLOADS_DIR || join(__dirname, "uploads");
 const AUTH_COOKIE = process.env.AUTH_COOKIE || "X-Toccatech-Auth";
 
 const app = express();

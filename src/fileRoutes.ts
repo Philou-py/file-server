@@ -14,7 +14,7 @@ import {
 } from "./helpers";
 
 const router = express.Router();
-const UPLOADS_DIR = process.env.UPLOADS_DIR || __dirname + "\\uploads";
+const UPLOADS_DIR = process.env.UPLOADS_DIR || join(__dirname, "uploads");
 
 const uploadBodySchema: ValidationSchema = {
   resource: {
