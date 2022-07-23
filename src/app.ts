@@ -65,7 +65,7 @@ declare global {
 
 app.use(checkAuth);
 
-app.get("/", (req, res) => {
+app.get("/", (_req, res) => {
   res.send({
     msg: "Welcome to File Server! This API enables applications to upload users' files to a secure storage, and manage them easily.",
   });
@@ -73,7 +73,7 @@ app.get("/", (req, res) => {
 
 app.use("/files", fileRoutes);
 
-app.use((req, res) => {
+app.use((_req, res) => {
   res.status(404).send({ error: "Cette route n'existe pas !" });
 });
 

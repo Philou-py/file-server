@@ -56,7 +56,7 @@ router.post(
       resource: { id: req.resource!.id },
       createdAt: new Date().toISOString(),
     };
-    const responseBody = await sendFileInfo(newFile, req.currentUser!.authToken);
+    const responseBody = await sendFileInfo(newFile);
     if (responseBody.errors) {
       res.status(400).send({
         error:

@@ -3,7 +3,6 @@ version: "3.9"
 services:
   api:
     image: philoupy/file-server
-    command: npm run start
     ports:
       - "3001:3001"
     volumes:
@@ -14,6 +13,6 @@ services:
       - DB_URL=http://dgraph.toccatech.fr/graphql
       - APP_PORT=3001
       - UPLOADS_DIR=/file-server
-      - DOMAIN1=https://file-server.toccatech.com
-      - DOMAIN2=http://file-server.toccatech.fr
+      - DOMAIN1=https://toccatech.com
+      - DOMAIN2=http://toccatech.fr
       - AUTH_COOKIE=X-Toccatech-Auth

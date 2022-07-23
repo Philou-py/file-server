@@ -26,7 +26,7 @@ const QUERY_USER = `
   }
 `;
 
-export const checkAuth = async (req: Request, res: Response, next: NextFunction) => {
+export const checkAuth = async (req: Request, _res: Response, next: NextFunction) => {
   if (!req.cookies[AUTH_COOKIE]) {
     next();
   } else {
@@ -141,7 +141,7 @@ const ADD_FILE = `
   }
 `;
 
-export const sendFileInfo = async (newFile: any, authToken: string) => {
+export const sendFileInfo = async (newFile: any) => {
   const { data: responseBody } = await axios.post(
     DGRAPH_URL,
     { query: ADD_FILE, variables: { addFileInput: [newFile] } },
@@ -241,7 +241,7 @@ export const deleteFileInfoWithId = async (req: Request, res: Response, next: Ne
 
 const storage = multer.diskStorage({
   destination: UPLOADS_DIR,
-  filename(req, file, callback) {
+  filename(_req, file, callback) {
     let fileExtension = extname(file.originalname);
     callback(null, `${basename(file.originalname, fileExtension)}-${Date.now()}${fileExtension}`);
   },
