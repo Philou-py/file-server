@@ -19,6 +19,7 @@ app.use(cookieParser());
 app.use(
   cors({
     origin: [/^(http|https):\/\/localhost:[0-9]{1,6}$/, DOMAIN1, DOMAIN2],
+    credentials: true,
   })
 );
 app.use(helmet());
