@@ -1,6 +1,6 @@
 {
   "name": "file-server",
-  "version": "0.0.0",
+  "version": "1.0.0",
   "description": "file-server",
   "main": "src/app.ts",
   "scripts": {
@@ -12,7 +12,7 @@
     "type": "git",
     "url": "git+https://github.com/Philou-py/file-server.git"
   },
-  "author": "",
+  "author": "Philippe Schoenhenz",
   "license": "ISC",
   "bugs": {
     "url": "https://github.com/Philou-py/file-server/issues"
