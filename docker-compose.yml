@@ -1,0 +1,18 @@
+version: "3.9"
+
+services:
+  api:
+    image: philoupy/file-server
+    ports:
+      - "3001:3001"
+    volumes:
+      - /mnt/vol01:/file-server
+    deploy:
+      mode: global
+    environment:
+      - DB_URL=https://dgraph.toccatech.com/graphql
+      - APP_PORT=3001
+      - UPLOADS_DIR=/file-server
+      - DOMAIN1=https://toccatech.com
+      - DOMAIN2=http://toccatech.fr
+      - AUTH_COOKIE=X-Toccatech-Auth
